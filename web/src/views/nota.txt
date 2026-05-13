@@ -1,0 +1,6 @@
+Despues borrar
+
+├── views/              # "Pantallas" completas del recorrido [cite: 24, 87]
+│   ├── Layout.jsx      # Marco general (Sidebar + Topbar)
+│   ├── SeatingMap.jsx  # La vista interactiva del plano 
+│   └── Dashboard.jsx   # Vista de métricas (con datos falsos) [cite: 3, 36]

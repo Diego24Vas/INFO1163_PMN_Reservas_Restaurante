@@ -1,0 +1,24 @@
+/*   https://www.realtimecolors.com/?colors=2D3436-F4F7F6-0984E3-636E72-00B894&fonts=Inter-Inter    */
+:root[data-theme="luz"] {
+  --texto: #2D3436;
+  --fondo: #F4F7F6;
+  --primario: #0984E3;
+  --secundario: #636E72;
+  --acento: #00B894;
+}
+
+
+
+/*   https://www.realtimecolors.com/?colors=dbdde1-1e272e-3398db-151719-e77e23&fonts=Inter-Inter    */
+:root[data-theme="oscuro"] {
+  --texto: #dbdde1;
+  --fondo: #1e272e;
+  --primario: #3398db;
+  --secundario: #151719;
+  --acento: #e77e23;
+}
+
+
+
+
+

@@ -1,0 +1,4 @@
+Despues borrar
+
+├── mock/               # EL CORAZÓN DEL PMN [cite: 14]
+│   └── data.json       # Datos ficticios de mesas, estados y pedidos
