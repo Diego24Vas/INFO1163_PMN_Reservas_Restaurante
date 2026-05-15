@@ -1,0 +1,56 @@
+<script setup>
+import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { store } from '../store'
+import NavBar from '../components/NavBar.vue'
+import { Map, Users, BarChart3 } from 'lucide-vue-next'
+
+const router = useRouter()
+
+onMounted(() => {
+  if (store.role !== 'admin') router.push('/')
+})
+
+const goToEditor = () => router.push('/admin/editor')
+</script>
+
+<template>
+  <div class="flex-1 flex flex-col w-full h-full min-h-screen bg-neutral-50">
+    <NavBar roleName="Administrador" />
+    <main class="flex-1 max-w-6xl w-full mx-auto p-8 flex flex-col animate-[fadeIn_0.2s_ease-out]">
+      <header class="mb-10">
+        <h1 class="text-3xl font-semibold tracking-tight text-neutral-900">Panel de Administración</h1>
+        <p class="text-sm text-neutral-500 mt-2 font-medium">Gestiona la configuración global del restaurante.</p>
+      </header>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Tarjeta: Editor de Topología -->
+        <button @click="goToEditor" class="group text-left bg-white border border-neutral-200 rounded-2xl p-6 hover:border-neutral-300 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-200 transition-all cursor-pointer flex flex-col">
+          <div class="h-10 w-10 rounded-xl bg-neutral-100 text-neutral-600 flex items-center justify-center mb-4 group-hover:bg-neutral-900 group-hover:text-white transition-colors">
+            <Map :stroke-width="1.5" class="w-5 h-5" />
+          </div>
+          <h2 class="text-lg font-semibold tracking-tight text-neutral-900">Editor de Topología</h2>
+          <p class="text-sm text-neutral-500 mt-1 leading-relaxed">Configura salas, añade mesas y diseña el mapa visual interactivo del local.</p>
+        </button>
+
+        <!-- Tarjeta: Gestión de Personal (Placeholder) -->
+        <div class="group text-left bg-white/50 border border-neutral-200 border-dashed rounded-2xl p-6 flex flex-col opacity-60">
+          <div class="h-10 w-10 rounded-xl bg-neutral-100 text-neutral-600 flex items-center justify-center mb-4">
+            <Users :stroke-width="1.5" class="w-5 h-5" />
+          </div>
+          <h2 class="text-lg font-semibold tracking-tight text-neutral-900">Gestión de Personal</h2>
+          <p class="text-sm text-neutral-500 mt-1 leading-relaxed">Módulo en construcción. Asignación de roles y turnos.</p>
+        </div>
+
+        <!-- Tarjeta: Métricas (Placeholder) -->
+        <div class="group text-left bg-white/50 border border-neutral-200 border-dashed rounded-2xl p-6 flex flex-col opacity-60">
+          <div class="h-10 w-10 rounded-xl bg-neutral-100 text-neutral-600 flex items-center justify-center mb-4">
+            <BarChart3 :stroke-width="1.5" class="w-5 h-5" />
+          </div>
+          <h2 class="text-lg font-semibold tracking-tight text-neutral-900">Auditoría y Métricas</h2>
+          <p class="text-sm text-neutral-500 mt-1 leading-relaxed">Módulo en construcción. Análisis de rotación y SLAs.</p>
+        </div>
+      </div>
+    </main>
+  </div>
+</template>

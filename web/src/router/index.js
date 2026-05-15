@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import RoleSelection from '../views/RoleSelection.vue'
-import Dashboard from '../views/Dashboard.vue'
+import AdminDashboard from '../views/AdminDashboard.vue'
+import AdminEditor from '../views/AdminEditor.vue'
+import WaiterDashboard from '../views/WaiterDashboard.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -11,9 +13,19 @@ const router = createRouter({
       component: RoleSelection
     },
     {
-      path: '/dashboard',
-      name: 'dashboard',
-      component: Dashboard
+      path: '/admin',
+      name: 'admin-dashboard',
+      component: AdminDashboard
+    },
+    {
+      path: '/admin/editor',
+      name: 'admin-editor',
+      component: AdminEditor
+    },
+    {
+      path: '/waiter',
+      name: 'waiter-dashboard',
+      component: WaiterDashboard
     }
   ]
 })
