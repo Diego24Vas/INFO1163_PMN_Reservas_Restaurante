@@ -1,8 +1,0 @@
-Despues borrar
-
-├── components/         # Elementos UI reutilizables [cite: 15]
-│   ├── Table.jsx       # Representación visual de la mesa
-│   ├── Sidebar.jsx     # Menú de navegación principal [cite: 70]
-│   └── ModalPedido.jsx # Formulario simulado para tomar órdenes
-
-

@@ -1,3 +1,0 @@
-Despues borrar
-
-├── public/                 # Assets estáticos (iconos de mesas, logo)
