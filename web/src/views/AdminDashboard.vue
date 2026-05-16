@@ -12,6 +12,7 @@ onMounted(() => {
 })
 
 const goToEditor = () => router.push('/admin/editor')
+const goToStaff = () => router.push('/admin/staff')
 </script>
 
 <template>
@@ -33,14 +34,14 @@ const goToEditor = () => router.push('/admin/editor')
           <p class="text-sm text-neutral-500 mt-1 leading-relaxed">Configura salas, añade mesas y diseña el mapa visual interactivo del local.</p>
         </button>
 
-        <!-- Tarjeta: Gestión de Personal (Placeholder) -->
-        <div class="group text-left bg-white/50 border border-neutral-200 border-dashed rounded-2xl p-6 flex flex-col opacity-60">
-          <div class="h-10 w-10 rounded-xl bg-neutral-100 text-neutral-600 flex items-center justify-center mb-4">
+        <!-- Tarjeta: Gestión de Personal -->
+        <button @click="goToStaff" class="group text-left bg-white border border-neutral-200 rounded-2xl p-6 hover:border-neutral-300 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-200 transition-all cursor-pointer flex flex-col">
+          <div class="h-10 w-10 rounded-xl bg-neutral-100 text-neutral-600 flex items-center justify-center mb-4 group-hover:bg-neutral-900 group-hover:text-white transition-colors">
             <Users :stroke-width="1.5" class="w-5 h-5" />
           </div>
           <h2 class="text-lg font-semibold tracking-tight text-neutral-900">Gestión de Personal</h2>
-          <p class="text-sm text-neutral-500 mt-1 leading-relaxed">Módulo en construcción. Asignación de roles y turnos.</p>
-        </div>
+          <p class="text-sm text-neutral-500 mt-1 leading-relaxed">Administra los accesos de los meseros al sistema y sus identificadores.</p>
+        </button>
 
         <!-- Tarjeta: Métricas (Placeholder) -->
         <div class="group text-left bg-white/50 border border-neutral-200 border-dashed rounded-2xl p-6 flex flex-col opacity-60">

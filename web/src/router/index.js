@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import RoleSelection from '../views/RoleSelection.vue'
 import AdminDashboard from '../views/AdminDashboard.vue'
 import AdminEditor from '../views/AdminEditor.vue'
+import AdminStaff from '../views/AdminStaff.vue'
 import WaiterDashboard from '../views/WaiterDashboard.vue'
 
 const router = createRouter({
@@ -21,6 +22,11 @@ const router = createRouter({
       path: '/admin/editor',
       name: 'admin-editor',
       component: AdminEditor
+    },
+    {
+      path: '/admin/staff',
+      name: 'admin-staff',
+      component: AdminStaff
     },
     {
       path: '/waiter',

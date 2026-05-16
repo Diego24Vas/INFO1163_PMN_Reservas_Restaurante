@@ -8,8 +8,40 @@ export const store = reactive({
   tableCounter: 1,
   elementCounter: 1,
   
+  waiters: [],
+  activeWaiterId: null,
+  
   // Flag to know if it's already loaded
   isLoaded: false,
+  isStaffLoaded: false,
+
+  async loadStaff() {
+    if (this.isStaffLoaded) return;
+    try {
+      const res = await fetch('/api/staff');
+      if (res.ok) {
+        const data = await res.json();
+        this.waiters = data.waiters || [];
+        this.isStaffLoaded = true;
+      }
+    } catch (e) {
+      console.error('Failed to load staff from mock API', e);
+    }
+  },
+
+  async saveStaff() {
+    try {
+      await fetch('/api/staff', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          waiters: this.waiters
+        })
+      });
+    } catch (e) {
+      console.error('Failed to save staff to mock API', e);
+    }
+  },
 
   async loadTopology() {
     if (this.isLoaded) return;

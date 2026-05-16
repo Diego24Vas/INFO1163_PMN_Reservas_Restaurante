@@ -5,6 +5,7 @@ import { store } from './store'
 
 onMounted(() => {
   store.loadTopology()
+  store.loadStaff()
 })
 </script>
 
