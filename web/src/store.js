@@ -2,23 +2,49 @@ import { reactive } from 'vue'
 
 export const store = reactive({
   role: null, // 'admin', 'waiter', null
-  rooms: [
-    {
-      id: 'room_1',
-      name: 'Salón Principal',
-      tables: [
-        { id: 't_1', number: 1, capacity: 4, state: 'disponible', x: 1400, y: 1500 },
-        { id: 't_2', number: 2, capacity: 2, state: 'ocupada', x: 1550, y: 1500 }
-      ],
-      elements: [
-        { id: 'e_1', type: 'wall', x: 1372, y: 1400, width: 256, height: 8, rotation: 0 }
-      ]
-    }
-  ],
-  activeRoomId: 'room_1',
+  rooms: [],
+  activeRoomId: null,
   activeTable: null,
-  tableCounter: 3,
-  elementCounter: 2
+  tableCounter: 1,
+  elementCounter: 1,
+  
+  // Flag to know if it's already loaded
+  isLoaded: false,
+
+  async loadTopology() {
+    if (this.isLoaded) return;
+    try {
+      const res = await fetch('/api/topology');
+      if (res.ok) {
+        const data = await res.json();
+        this.rooms = data.rooms || [];
+        this.tableCounter = data.tableCounter || 1;
+        this.elementCounter = data.elementCounter || 1;
+        if (this.rooms.length > 0 && !this.activeRoomId) {
+          this.activeRoomId = this.rooms[0].id;
+        }
+        this.isLoaded = true;
+      }
+    } catch (e) {
+      console.error('Failed to load topology from mock API', e);
+    }
+  },
+
+  async saveTopology() {
+    try {
+      await fetch('/api/topology', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rooms: this.rooms,
+          tableCounter: this.tableCounter,
+          elementCounter: this.elementCounter
+        })
+      });
+    } catch (e) {
+      console.error('Failed to save topology to mock API', e);
+    }
+  }
 })
 
 export const stateConfig = {

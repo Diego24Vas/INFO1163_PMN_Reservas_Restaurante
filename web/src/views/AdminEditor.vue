@@ -1,11 +1,11 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { store } from '../store'
 import NavBar from '../components/NavBar.vue'
 import { 
   Plus, ChevronLeft, Pencil, Trash2, Grid, Grip, Square, AlertCircle, 
-  ZoomIn, ZoomOut, RotateCw, ArrowRightLeft, Focus, Move
+  ZoomIn, ZoomOut, RotateCw, ArrowRightLeft, Focus, Move, Save, Copy
 } from 'lucide-vue-next'
 import Dialog from 'primevue/dialog'
 
@@ -72,8 +72,31 @@ const centerView = () => {
   }
 }
 
-onMounted(() => {
+const isDirty = ref(false)
+const isSaving = ref(false)
+
+// Watch changes to topology to mark as dirty
+watch(() => store.rooms, () => {
+  if (store.isLoaded) {
+    isDirty.value = true
+  }
+}, { deep: true })
+
+const saveChanges = async () => {
+  if (!isDirty.value) return
+  isSaving.value = true
+  await store.saveTopology()
+  isDirty.value = false
+  isSaving.value = false
+}
+
+onMounted(async () => {
   if (store.role !== 'admin') router.push('/')
+  
+  await store.loadTopology()
+  // Reset dirty flag after initial load
+  setTimeout(() => isDirty.value = false, 100)
+  
   window.addEventListener('mouseup', handleMouseUp)
   window.addEventListener('mousemove', handleMouseMove)
   
@@ -250,6 +273,31 @@ const confirmEditTable = () => {
   }
 }
 
+const duplicateItem = () => {
+  if (activeRoom.value && selectedItem.value) {
+    if (selectedItemType.value === 'table') {
+      const newItem = {
+        ...selectedItem.value,
+        id: 't_' + Date.now(),
+        number: store.tableCounter++,
+        x: selectedItem.value.x + 40,
+        y: selectedItem.value.y + 40
+      }
+      activeRoom.value.tables.push(newItem)
+      selectedItemId.value = newItem.id
+    } else {
+      const newItem = {
+        ...selectedItem.value,
+        id: 'e_' + Date.now(),
+        x: selectedItem.value.x + 40,
+        y: selectedItem.value.y + 40
+      }
+      activeRoom.value.elements.push(newItem)
+      selectedItemId.value = newItem.id
+    }
+  }
+}
+
 const deleteItem = () => {
   if (activeRoom.value && selectedItemId.value) {
     if (selectedItemType.value === 'table') {
@@ -383,8 +431,15 @@ const handleMouseUp = () => {
               </button>
 
               <!-- Botón Añadir Mesa -->
-              <button @click="openTableDialog" class="inline-flex items-center gap-2 px-4 py-2 bg-neutral-900 text-white text-sm font-medium rounded-lg hover:bg-neutral-800 transition-colors shadow-sm">
+              <button @click="openTableDialog" class="inline-flex items-center gap-2 px-4 py-2 bg-neutral-100 text-neutral-900 border border-neutral-200 text-sm font-medium rounded-lg hover:bg-neutral-200 transition-colors shadow-sm">
                 <Plus :stroke-width="1.5" class="w-4 h-4" /> Mesa
+              </button>
+
+              <!-- Botón Guardar -->
+              <button @click="saveChanges" :disabled="!isDirty || isSaving" :class="['inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all shadow-sm', isDirty ? 'bg-neutral-900 text-white hover:bg-neutral-800' : 'bg-neutral-100 text-neutral-400 border border-neutral-200 cursor-not-allowed']">
+                <Save v-if="!isSaving" :stroke-width="1.5" class="w-4 h-4" />
+                <svg v-else class="animate-spin -ml-1 mr-1 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                {{ isSaving ? 'Guardando...' : 'Guardar' }}
               </button>
             </div>
           </header>
@@ -474,6 +529,10 @@ const handleMouseUp = () => {
               </button>
             </template>
 
+            <div class="w-px h-5 bg-neutral-700 mx-1"></div>
+            <button @click="duplicateItem" class="px-3 py-2 hover:bg-neutral-800 rounded-xl transition-colors flex items-center gap-2 text-sm font-medium text-white" title="Duplicar">
+              <Copy :stroke-width="1.5" class="w-4 h-4" /> Duplicar
+            </button>
             <div class="w-px h-5 bg-neutral-700 mx-1"></div>
             <button @click="deleteItem" class="px-3 py-2 hover:bg-rose-500/20 rounded-xl transition-colors flex items-center gap-2 text-sm font-medium text-rose-400 hover:text-rose-300">
               <Trash2 :stroke-width="1.5" class="w-4 h-4" /> Eliminar
