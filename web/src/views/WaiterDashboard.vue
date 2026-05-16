@@ -62,10 +62,11 @@ onMounted(async () => {
           const elapsedMinutes = Math.floor((now - table.stateUpdatedAt) / 60000)
           let isWarning = false
           
-          // Umbrales de alerta (Ajustados para PMN: Ocupada > 60 min, Sucia > 5 min)
-          // Para pruebas rápidas, podrías bajar estos números
-          if (table.state === 'ocupada' && elapsedMinutes >= 60) isWarning = true
-          if (table.state === 'sucia' && elapsedMinutes >= 5) isWarning = true
+          // Umbrales de alerta según Reglas de Negocio (RN07 y RN08)
+          // RN07: Alerta de Inactividad (>120 min)
+          if (table.state === 'ocupada' && elapsedMinutes >= 120) isWarning = true
+          // RN08: Tiempo Máximo de Limpieza (>10 min)
+          if (table.state === 'sucia' && elapsedMinutes >= 10) isWarning = true
           
           elapsedTimes.value[table.id] = { minutes: elapsedMinutes, isWarning }
         } else {
