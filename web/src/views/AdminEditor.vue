@@ -63,15 +63,24 @@ const bgStyle = computed(() => {
 })
 
 // Lifecycle
+const centerView = () => {
+  if (canvasContainer.value) {
+    const targetX = 1500 - (canvasContainer.value.clientWidth / 2)
+    const targetY = 1500 - (canvasContainer.value.clientHeight / 2)
+    canvasContainer.value.scrollLeft = targetX
+    canvasContainer.value.scrollTop = targetY
+  }
+}
+
 onMounted(() => {
   if (store.role !== 'admin') router.push('/')
   window.addEventListener('mouseup', handleMouseUp)
   window.addEventListener('mousemove', handleMouseMove)
   
-  if (canvasContainer.value) {
-    canvasContainer.value.scrollLeft = 1500 - (canvasContainer.value.clientWidth / 2)
-    canvasContainer.value.scrollTop = 1500 - (canvasContainer.value.clientHeight / 2)
-  }
+  // Attempt to center immediately and slightly after to ensure DOM is sized
+  setTimeout(centerView, 0)
+  setTimeout(centerView, 50)
+  setTimeout(centerView, 150)
 })
 
 onUnmounted(() => {
