@@ -318,42 +318,54 @@ let isPanning = false
 let panStartX, panStartY, scrollLeftStart, scrollTopStart
 
 const startDrag = (e, item, type) => {
-  if (e.button !== 0) return
+  if (e.type === 'mousedown' && e.button !== 0) return
   isDragging = true
   selectedItemId.value = item.id
   selectedItemType.value = type
   
-  startX = e.clientX
-  startY = e.clientY
+  startX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX
+  startY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY
   initialX = item.x
   initialY = item.y
   
   document.body.style.userSelect = 'none'
+  if (e.type === 'touchstart') {
+    window.addEventListener('touchmove', handleMouseMove, { passive: false })
+    window.addEventListener('touchend', handleMouseUp)
+  }
 }
 
 const startPan = (e) => {
-  if (e.button !== 0) return
+  if (e.type === 'mousedown' && e.button !== 0) return
   isPanning = true
-  panStartX = e.clientX
-  panStartY = e.clientY
+  panStartX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX
+  panStartY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY
   if (canvasContainer.value) {
     scrollLeftStart = canvasContainer.value.scrollLeft
     scrollTopStart = canvasContainer.value.scrollTop
   }
   deselect()
   document.body.style.userSelect = 'none'
+  if (e.type === 'touchstart') {
+    window.addEventListener('touchmove', handleMouseMove, { passive: false })
+    window.addEventListener('touchend', handleMouseUp)
+  }
 }
 
 const handleMouseMove = (e) => {
+  const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX
+  const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY
+
   if (isDragging && selectedItem.value) {
-    const dx = (e.clientX - startX) / zoomLevel.value
-    const dy = (e.clientY - startY) / zoomLevel.value
+    if (e.cancelable) e.preventDefault()
+    const dx = (clientX - startX) / zoomLevel.value
+    const dy = (clientY - startY) / zoomLevel.value
     
     selectedItem.value.x = Math.max(0, initialX + dx)
     selectedItem.value.y = Math.max(0, initialY + dy)
   } else if (isPanning && canvasContainer.value) {
-    const dx = e.clientX - panStartX
-    const dy = e.clientY - panStartY
+    const dx = clientX - panStartX
+    const dy = clientY - panStartY
     
     canvasContainer.value.scrollLeft = scrollLeftStart - dx
     canvasContainer.value.scrollTop = scrollTopStart - dy
@@ -364,17 +376,19 @@ const handleMouseUp = () => {
   if (isDragging) isDragging = false
   if (isPanning) isPanning = false
   document.body.style.userSelect = 'auto'
+  window.removeEventListener('touchmove', handleMouseMove)
+  window.removeEventListener('touchend', handleMouseUp)
 }
 
 </script>
 
 <template>
-  <div class="flex-1 flex flex-col w-full h-full min-h-screen bg-neutral-50">
+  <div class="flex-1 flex flex-col w-full h-full min-h-screen bg-neutral-50 overflow-hidden">
     <NavBar roleName="Administrador" />
-    <div class="flex-1 flex overflow-hidden animate-[fadeIn_0.2s_ease-out]">
+    <div class="flex-1 flex flex-col md:flex-row overflow-hidden animate-[fadeIn_0.2s_ease-out]">
       
       <!-- Sidebar Salas -->
-      <aside class="w-64 border-r border-neutral-200 bg-white flex flex-col z-20">
+      <aside class="w-full md:w-64 border-b md:border-b-0 md:border-r border-neutral-200 bg-white flex flex-col z-20 shrink-0 md:h-full max-h-[35vh] md:max-h-full">
         <div class="p-6 border-b border-neutral-100 flex items-center justify-between">
           <h2 class="text-sm font-semibold tracking-tight text-neutral-900 uppercase">Salas</h2>
           <button @click="openRoomDialog" class="text-neutral-400 hover:text-neutral-900 transition-colors">
@@ -399,53 +413,51 @@ const handleMouseUp = () => {
       <!-- Area Principal Editor -->
       <main class="flex-1 flex flex-col bg-neutral-50/50 relative overflow-hidden">
         <template v-if="activeRoom">
-          <header class="px-6 py-4 border-b border-neutral-200 bg-white flex justify-between items-center z-20 shadow-sm">
-            <div class="flex items-center gap-4">
-              <button @click="router.push('/admin')" class="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-neutral-500 hover:text-neutral-900 hover:bg-neutral-50 transition-colors shadow-sm">
+          <header class="px-4 md:px-6 py-3 md:py-4 border-b border-neutral-200 bg-white flex flex-col md:flex-row md:justify-between items-start md:items-center gap-3 md:gap-0 z-20 shadow-sm shrink-0">
+            <div class="flex items-center gap-3 md:gap-4 w-full md:w-auto">
+              <button @click="router.push('/admin')" class="w-8 h-8 flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-neutral-500 hover:text-neutral-900 hover:bg-neutral-50 transition-colors shadow-sm shrink-0">
                 <ChevronLeft :stroke-width="1.5" class="w-4 h-4" />
               </button>
-              <div>
-                <h1 class="text-xl font-semibold tracking-tight text-neutral-900">{{ activeRoom.name }}</h1>
+              <div class="flex-1 truncate">
+                <h1 class="text-lg md:text-xl font-semibold tracking-tight text-neutral-900 truncate">{{ activeRoom.name }}</h1>
               </div>
             </div>
             
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-3 md:gap-4 w-full md:w-auto overflow-x-auto pb-1 md:pb-0 hide-scrollbar shrink-0">
               <!-- Botones Elementos Arquitectónicos -->
-              <div class="flex items-center gap-2 border-r border-neutral-200 pr-4">
-                <button @click="addElement('wall')" class="px-3 py-2 text-xs font-medium text-neutral-700 bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-colors border border-neutral-200 shadow-sm flex items-center gap-1.5">
+              <div class="flex items-center gap-2 border-r border-neutral-200 pr-3 md:pr-4 shrink-0">
+                <button @click="addElement('wall')" class="px-3 py-2 text-xs font-medium text-neutral-700 bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-colors border border-neutral-200 shadow-sm flex items-center gap-1.5 shrink-0">
                   <div class="w-3 h-[3px] bg-neutral-800 rounded-sm"></div> Muro
                 </button>
-                <button @click="addElement('window')" class="px-3 py-2 text-xs font-medium text-neutral-700 bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-colors border border-neutral-200 shadow-sm flex items-center gap-1.5">
+                <button @click="addElement('window')" class="px-3 py-2 text-xs font-medium text-neutral-700 bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-colors border border-neutral-200 shadow-sm flex items-center gap-1.5 shrink-0">
                   <div class="w-3 h-1.5 bg-sky-200 border border-sky-400 rounded-sm"></div> Ventana
                 </button>
-                <button @click="addElement('door')" class="px-3 py-2 text-xs font-medium text-neutral-700 bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-colors border border-neutral-200 shadow-sm flex items-center gap-1.5">
-                  <div class="w-3 h-1.5 bg-amber-600 rounded-sm"></div> Puerta
+                <button @click="addElement('door')" class="px-3 py-2 text-xs font-medium text-neutral-700 bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-colors border border-neutral-200 shadow-sm flex items-center gap-1.5 shrink-0">
+                  <div class="w-3 h-[3px] bg-amber-600 rounded-sm"></div> Puerta
+                </button>
+                
+                <!-- Botón Ver Cuadrícula -->
+                <button @click="cycleBgMode" class="px-3 py-2 text-xs font-medium text-neutral-700 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-lg transition-colors shadow-sm flex items-center shrink-0" :title="`Fondo: ${bgMode}`">
+                  <Square v-if="bgMode === 'none'" :stroke-width="1.5" class="w-4 h-4" />
+                  <Grid v-else-if="bgMode === 'grid'" :stroke-width="1.5" class="w-4 h-4" />
+                  <Grip v-else :stroke-width="1.5" class="w-4 h-4" />
                 </button>
               </div>
 
-              <!-- Botón Toggle Fondo -->
-              <button @click="cycleBgMode" class="w-9 h-9 flex items-center justify-center bg-white border border-neutral-200 text-neutral-500 rounded-lg hover:bg-neutral-50 hover:text-neutral-900 transition-colors shadow-sm" title="Cambiar Fondo">
-                <Grid v-if="bgMode === 'grid'" :stroke-width="1.5" class="w-4 h-4" />
-                <Grip v-else-if="bgMode === 'dots'" :stroke-width="1.5" class="w-4 h-4" />
-                <Square v-else :stroke-width="1.5" class="w-4 h-4" />
-              </button>
-
-              <!-- Botón Añadir Mesa -->
-              <button @click="openTableDialog" class="inline-flex items-center gap-2 px-4 py-2 bg-neutral-100 text-neutral-900 border border-neutral-200 text-sm font-medium rounded-lg hover:bg-neutral-200 transition-colors shadow-sm">
+              <!-- Añadir Mesa -->
+              <button @click="openTableDialog" class="px-3 md:px-4 py-2 text-xs md:text-sm font-medium text-white bg-neutral-900 hover:bg-neutral-800 rounded-lg transition-colors shadow-sm flex items-center gap-2 shrink-0">
                 <Plus :stroke-width="1.5" class="w-4 h-4" /> Mesa
               </button>
-
-              <!-- Botón Guardar -->
-              <button @click="saveChanges" :disabled="!isDirty || isSaving" :class="['inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all shadow-sm', isDirty ? 'bg-neutral-900 text-white hover:bg-neutral-800' : 'bg-neutral-100 text-neutral-400 border border-neutral-200 cursor-not-allowed']">
-                <Save v-if="!isSaving" :stroke-width="1.5" class="w-4 h-4" />
-                <svg v-else class="animate-spin -ml-1 mr-1 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                {{ isSaving ? 'Guardando...' : 'Guardar' }}
+              
+              <!-- Guardar Topología -->
+              <button @click="store.saveTopology" class="px-3 md:px-4 py-2 text-xs md:text-sm font-medium text-neutral-700 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-lg transition-colors shadow-sm flex items-center gap-2 shrink-0">
+                <Save :stroke-width="1.5" class="w-4 h-4" /> Guardar
               </button>
             </div>
           </header>
           
           <!-- Controles de Zoom Flotantes -->
-          <div class="absolute right-6 bottom-6 z-30 flex flex-col gap-2 bg-white p-1 rounded-xl shadow-lg border border-neutral-200">
+          <div class="absolute right-4 bottom-24 md:right-6 md:bottom-6 z-30 flex flex-col gap-2 bg-white p-1 rounded-xl shadow-lg border border-neutral-200">
             <button @click="zoomIn" class="w-8 h-8 flex items-center justify-center text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors">
               <ZoomIn :stroke-width="1.5" class="w-4 h-4" />
             </button>
@@ -460,13 +472,14 @@ const handleMouseUp = () => {
           </div>
 
           <!-- Dropzone Container (Overflow Area for Panning) -->
-          <div ref="canvasContainer" class="flex-1 relative w-full h-full overflow-auto bg-neutral-50/50 hide-scrollbar">
+          <div ref="canvasContainer" class="flex-1 relative w-full h-full overflow-auto bg-neutral-50/50 hide-scrollbar touch-none">
             
             <!-- Lienzo Escalable y Pandeable -->
             <div 
               class="absolute transition-transform duration-200 origin-top-left cursor-grab active:cursor-grabbing" 
               :style="[bgStyle, { transform: `scale(${zoomLevel})`, width: '3000px', height: '3000px' }]" 
-              @mousedown.self="startPan">
+              @mousedown.self="startPan"
+              @touchstart.self="startPan">
               
               <!-- Elementos Arquitectónicos (Paredes, Ventanas, Puertas) -->
               <div 
@@ -483,7 +496,8 @@ const handleMouseUp = () => {
                   width: el.width + 'px', height: el.height + 'px',
                   transform: `rotate(${el.rotation}deg)` 
                 }" 
-                @mousedown.stop="startDrag($event, el, 'element')">
+                @mousedown.stop="startDrag($event, el, 'element')"
+                @touchstart.stop="startDrag($event, el, 'element')">
               </div>
 
               <!-- Mesas -->
@@ -494,7 +508,8 @@ const handleMouseUp = () => {
                   selectedItemId === table.id && selectedItemType === 'table' ? 'ring-2 ring-blue-500 shadow-md border-transparent' : 'border border-neutral-300 hover:border-neutral-400 hover:shadow-md'
                 ]"
                 :style="{ left: table.x + 'px', top: table.y + 'px' }" 
-                @mousedown.stop="startDrag($event, table, 'table')">
+                @mousedown.stop="startDrag($event, table, 'table')"
+                @touchstart.stop="startDrag($event, table, 'table')">
                 <span class="text-lg font-semibold tracking-tight text-neutral-800">{{ table.number }}</span>
                 <span class="text-[10px] font-medium text-neutral-400 uppercase tracking-widest">{{ table.capacity }} pax</span>
               </div>
@@ -503,39 +518,39 @@ const handleMouseUp = () => {
           </div>
 
           <!-- Toolbar Flotante (Dinámico según Selección) -->
-          <div v-if="selectedItem" class="absolute bottom-8 left-1/2 -translate-x-1/2 bg-neutral-900 text-white p-1.5 rounded-2xl shadow-2xl flex items-center z-40 animate-[fadeIn_0.2s_ease-out]">
-            <div class="px-4 py-2 text-sm font-medium text-neutral-300 capitalize">
+          <div v-if="selectedItem" class="absolute bottom-8 left-1/2 -translate-x-1/2 w-[90%] md:w-auto bg-neutral-900 text-white p-1.5 rounded-2xl shadow-2xl flex flex-wrap justify-center md:flex-nowrap items-center gap-1 z-40 animate-[fadeIn_0.2s_ease-out]">
+            <div class="px-2 md:px-4 py-2 text-xs md:text-sm font-medium text-neutral-300 capitalize shrink-0">
               {{ selectedItemType === 'table' ? `Mesa ${selectedItem.number}` : selectedItem.type === 'wall' ? 'Muro' : selectedItem.type === 'window' ? 'Ventana' : 'Puerta' }}
             </div>
-            <div class="w-px h-5 bg-neutral-700 mx-1"></div>
+            <div class="hidden md:block w-px h-5 bg-neutral-700 mx-1"></div>
             
             <!-- Controles Específicos para Elementos -->
             <template v-if="selectedItemType === 'element'">
-              <button @click="rotateElement" class="px-3 py-2 hover:bg-neutral-800 rounded-xl transition-colors flex items-center gap-2 text-sm font-medium text-white" title="Rotar 90°">
-                <RotateCw :stroke-width="1.5" class="w-4 h-4" />
+              <button @click="rotateElement" class="px-2 md:px-3 py-2 hover:bg-neutral-800 rounded-xl transition-colors flex items-center gap-1 md:gap-2 text-xs md:text-sm font-medium text-white shrink-0" title="Rotar 90°">
+                <RotateCw :stroke-width="1.5" class="w-4 h-4" /> <span class="hidden md:inline">Rotar</span>
               </button>
-              <button @click="shrinkElement" class="px-3 py-2 hover:bg-neutral-800 rounded-xl transition-colors flex items-center gap-2 text-sm font-medium text-white" title="Acortar">
-                <Focus :stroke-width="1.5" class="w-4 h-4" />
+              <button @click="shrinkElement" class="px-2 md:px-3 py-2 hover:bg-neutral-800 rounded-xl transition-colors flex items-center gap-1 md:gap-2 text-xs md:text-sm font-medium text-white shrink-0" title="Acortar">
+                <Focus :stroke-width="1.5" class="w-4 h-4" /> <span class="hidden md:inline">-</span>
               </button>
-              <button @click="expandElement" class="px-3 py-2 hover:bg-neutral-800 rounded-xl transition-colors flex items-center gap-2 text-sm font-medium text-white" title="Alargar">
-                <ArrowRightLeft :stroke-width="1.5" class="w-4 h-4" />
+              <button @click="expandElement" class="px-2 md:px-3 py-2 hover:bg-neutral-800 rounded-xl transition-colors flex items-center gap-1 md:gap-2 text-xs md:text-sm font-medium text-white shrink-0" title="Alargar">
+                <ArrowRightLeft :stroke-width="1.5" class="w-4 h-4" /> <span class="hidden md:inline">+</span>
               </button>
             </template>
             
             <!-- Controles Específicos para Mesas -->
             <template v-if="selectedItemType === 'table'">
-              <button @click="openEditDialog" class="px-3 py-2 hover:bg-neutral-800 rounded-xl transition-colors flex items-center gap-2 text-sm font-medium text-white">
-                <Pencil :stroke-width="1.5" class="w-4 h-4" /> Editar
+              <button @click="openEditDialog" class="px-2 md:px-3 py-2 hover:bg-neutral-800 rounded-xl transition-colors flex items-center gap-1 md:gap-2 text-xs md:text-sm font-medium text-white shrink-0">
+                <Pencil :stroke-width="1.5" class="w-4 h-4" /> <span class="hidden sm:inline">Editar</span>
               </button>
             </template>
 
-            <div class="w-px h-5 bg-neutral-700 mx-1"></div>
-            <button @click="duplicateItem" class="px-3 py-2 hover:bg-neutral-800 rounded-xl transition-colors flex items-center gap-2 text-sm font-medium text-white" title="Duplicar">
-              <Copy :stroke-width="1.5" class="w-4 h-4" /> Duplicar
+            <div class="hidden md:block w-px h-5 bg-neutral-700 mx-1"></div>
+            <button @click="duplicateItem" class="px-2 md:px-3 py-2 hover:bg-neutral-800 rounded-xl transition-colors flex items-center gap-1 md:gap-2 text-xs md:text-sm font-medium text-white shrink-0" title="Duplicar">
+              <Copy :stroke-width="1.5" class="w-4 h-4" /> <span class="hidden sm:inline">Duplicar</span>
             </button>
-            <div class="w-px h-5 bg-neutral-700 mx-1"></div>
-            <button @click="deleteItem" class="px-3 py-2 hover:bg-rose-500/20 rounded-xl transition-colors flex items-center gap-2 text-sm font-medium text-rose-400 hover:text-rose-300">
-              <Trash2 :stroke-width="1.5" class="w-4 h-4" /> Eliminar
+            <div class="hidden md:block w-px h-5 bg-neutral-700 mx-1"></div>
+            <button @click="deleteItem" class="px-2 md:px-3 py-2 hover:bg-rose-500/20 rounded-xl transition-colors flex items-center gap-1 md:gap-2 text-xs md:text-sm font-medium text-rose-400 hover:text-rose-300 shrink-0" title="Eliminar">
+              <Trash2 :stroke-width="1.5" class="w-4 h-4" /> <span class="hidden sm:inline">Eliminar</span>
             </button>
           </div>
 
