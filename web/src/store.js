@@ -10,10 +10,53 @@ export const store = reactive({
   
   waiters: [],
   activeWaiterId: null,
+
+  history: [],
   
   // Flag to know if it's already loaded
   isLoaded: false,
   isStaffLoaded: false,
+  isHistoryLoaded: false,
+
+  async loadHistory() {
+    if (this.isHistoryLoaded) return;
+    try {
+      const res = await fetch('/api/history');
+      if (res.ok) {
+        const data = await res.json();
+        this.history = data.history || [];
+        this.isHistoryLoaded = true;
+      }
+    } catch (e) {
+      console.error('Failed to load history from mock API', e);
+    }
+  },
+
+  async saveHistory() {
+    try {
+      await fetch('/api/history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ history: this.history })
+      });
+    } catch (e) {
+      console.error('Failed to save history to mock API', e);
+    }
+  },
+
+  async logEvent(waiterId, waiterName, tableNumber, roomName, action, affectedWaiterId = null) {
+    this.history.unshift({
+      id: 'evt_' + Date.now(),
+      timestamp: Date.now(),
+      waiterId,
+      waiterName,
+      tableNumber,
+      roomName,
+      action,
+      affectedWaiterId
+    });
+    await this.saveHistory();
+  },
 
   async loadStaff() {
     if (this.isStaffLoaded) return;

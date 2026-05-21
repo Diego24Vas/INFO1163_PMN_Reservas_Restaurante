@@ -52,6 +52,28 @@ const mockApiPlugin = () => ({
           res.setHeader('Content-Type', 'application/json')
           res.end(JSON.stringify({ success: true }))
         })
+      } else if (req.url === '/api/history' && req.method === 'GET') {
+        const filePath = path.resolve(process.cwd(), 'src/mock/history.json')
+        if (fs.existsSync(filePath)) {
+          res.setHeader('Content-Type', 'application/json')
+          res.end(fs.readFileSync(filePath))
+        } else {
+          res.statusCode = 404
+          res.end(JSON.stringify({ error: 'Not found' }))
+        }
+      } else if (req.url === '/api/history' && req.method === 'POST') {
+        let body = ''
+        req.on('data', chunk => { body += chunk.toString() })
+        req.on('end', () => {
+          const dirPath = path.resolve(process.cwd(), 'src/mock')
+          if (!fs.existsSync(dirPath)) {
+            fs.mkdirSync(dirPath, { recursive: true })
+          }
+          const filePath = path.resolve(dirPath, 'history.json')
+          fs.writeFileSync(filePath, body)
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ success: true }))
+        })
       } else {
         next()
       }
@@ -62,4 +84,8 @@ const mockApiPlugin = () => ({
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [vue(), mockApiPlugin()],
+  server: {
+    host: '0.0.0.0',
+    port: 5173
+  }
 })
